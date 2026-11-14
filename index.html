@@ -3,22 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReptiBreed - Suivi & Gestion d'Élevage</title>
+  <title>ReptiBreed - Android App</title>
   <style>
     body { background: #121212; color: #f5f5f5; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
-    .card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 32px 24px; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    h1 { color: #ff8c00; margin-top: 0; font-size: 1.8rem; }
-    .badge { display: inline-block; background: #2a2a2a; color: #ff8c00; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-bottom: 16px; }
-    p { color: #ccc; line-height: 1.5; margin-bottom: 24px; font-size: 0.95rem; }
-    .btn { display: inline-block; background: #ff8c00; color: #121212; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-size: 1.05rem; }
+    .card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 32px 24px; max-width: 420px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .langs { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+    .langs button { background: #2a2a2a; color: #bbb; border: 1px solid #3a3a3a; border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; cursor: pointer; }
+    .langs button.active { background: #ff8c00; color: #121212; border-color: #ff8c00; font-weight: bold; }
+    h1 { color: #ff8c00; margin: 0 0 12px 0; font-size: 1.85rem; }
+    .badge { display: inline-block; background: #2a2a2a; color: #ff8c00; padding: 4px 12px; border-radius: 20px; font-size: 0.88rem; font-weight: bold; margin-bottom: 14px; }
+    p { color: #ccc; line-height: 1.55; margin-bottom: 24px; font-size: 0.96rem; }
+    .btn { display: inline-block; background: #ff8c00; color: #121212; font-weight: bold; text-decoration: none; padding: 14px 26px; border-radius: 10px; font-size: 1.05rem; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="badge">5,0 ★ sur Google Play</div>
+    <div class="langs">
+      <button onclick="setLang('fr')" id="btn-fr">FR</button>
+      <button onclick="setLang('en')" id="btn-en">EN</button>
+      <button onclick="setLang('de')" id="btn-de">DE</button>
+      <button onclick="setLang('es')" id="btn-es">ES</button>
+      <button onclick="setLang('zh')" id="btn-zh">中文</button>
+    </div>
+    <div class="badge" id="badge">5,0 ★ sur Google Play</div>
     <h1>ReptiBreed</h1>
-    <p>L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.<br><br><em>The all-in-one Android app for snake &amp; reptile keepers.</em></p>
-    <a class="btn" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
+    <p id="desc">L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.</p>
+    <a class="btn" id="cta" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
   </div>
+
+  <script>
+    const i18n = {
+      fr: {
+        badge: "5,0 ★ sur Google Play",
+        desc: "L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.",
+        cta: "📲 Télécharger sur Google Play",
+        hl: "fr"
+      },
+      en: {
+        badge: "5.0 ★ on Google Play",
+        desc: "The all-in-one Android app for snake & reptile keepers: detailed profiles, feeding, shedding, care, breeding & genetics.",
+        cta: "📲 Download on Google Play",
+        hl: "en"
+      },
+      de: {
+        badge: "5,0 ★ bei Google Play",
+        desc: "Die All-in-One-Android-App für Schlangen- und Reptilienhalter: detaillierte Profile, Fütterung, Häutung, Pflege, Zucht & Genetik.",
+        cta: "📲 Bei Google Play herunterladen",
+        hl: "de"
+      },
+      es: {
+        badge: "5,0 ★ en Google Play",
+        desc: "La app Android todo en uno para criadores de serpientes y reptiles: fichas detalladas, alimentación, mudas, cuidados, cría y genética.",
+        cta: "📲 Descargar en Google Play",
+        hl: "es"
+      },
+      zh: {
+        badge: "Google Play 5.0 ★ 评分",
+        desc: "专为蛇类与爬宠饲养者打造的一站式 Android 应用：详细档案、喂食、蜕皮、护理、繁殖与基因记录。",
+        cta: "📲 前往 Google Play 下载",
+        hl: "zh-CN"
+      }
+    };
+
+    function setLang(lang) {
+      const t = i18n[lang] || i18n.en;
+      document.documentElement.lang = lang;
+      document.getElementById("badge").textContent = t.badge;
+      document.getElementById("desc").textContent = t.desc;
+      document.getElementById("cta").textContent = t.cta;
+      document.getElementById("cta").href = "https://play.google.com/store/apps/details?id=com.billou.reptibreed&hl=" + t.hl;
+      document.querySelectorAll(".langs button").forEach(b => b.classList.remove("active"));
+      const activeBtn = document.getElementById("btn-" + lang);
+      if (activeBtn) activeBtn.classList.add("active");
+    }
+
+    const navLang = (navigator.language || "en").toLowerCase().slice(0, 2);
+    setLang(i18n[navLang] ? navLang : "en");
+  </script>
 </body>
 </html>
