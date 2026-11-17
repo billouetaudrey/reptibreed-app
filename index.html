@@ -14,6 +14,9 @@
     .badge { display: inline-block; background: #2a2a2a; color: #ff8c00; padding: 4px 12px; border-radius: 20px; font-size: 0.88rem; font-weight: bold; margin-bottom: 14px; }
     p { color: #ccc; line-height: 1.55; margin-bottom: 24px; font-size: 0.96rem; }
     .btn { display: inline-block; background: #ff8c00; color: #121212; font-weight: bold; text-decoration: none; padding: 14px 26px; border-radius: 10px; font-size: 1.05rem; }
+    .admin-stats { display: none; margin-top: 22px; padding: 14px; background: #161616; border: 1px dashed #444; border-radius: 10px; font-size: 0.84rem; color: #aaa; text-align: left; }
+    .admin-stats strong { color: #ff8c00; }
+    .admin-stats div { margin: 4px 0; }
   </style>
 </head>
 <body>
@@ -29,9 +32,21 @@
     <h1>ReptiBreed</h1>
     <p id="desc">L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.</p>
     <a class="btn" id="cta" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
+
+    <div class="admin-stats" id="admin-stats">
+      <div><strong>📊 Stats privées ReptiBreed</strong></div>
+      <div id="stat-views">Vues page : chargement...</div>
+      <div id="stat-clicks">Clics Google Play : chargement...</div>
+      <div id="stat-ctr">Taux de clic bouton : ...</div>
+      <div id="stat-langs" style="margin-top:8px; font-size:0.78rem; color:#888;">Langues : ...</div>
+    </div>
   </div>
 
   <script>
+    const NS = "billou-reptibreed-app-2026";
+    const API = "https://api.counterapi.dev/v1/" + NS;
+    const isAdmin = new URLSearchParams(window.location.search).get("stats") === "1";
+
     const i18n = {
       fr: {
         badge: "5,0 ★ sur Google Play",
@@ -78,7 +93,39 @@
     }
 
     const navLang = (navigator.language || "en").toLowerCase().slice(0, 2);
-    setLang(i18n[navLang] ? navLang : "en");
+    const detectedLang = i18n[navLang] ? navLang : "en";
+    setLang(detectedLang);
+
+    // Enregistrement silencieux (ne comptabilise pas tes propres visites admin ?stats=1)
+    if (!isAdmin) {
+      fetch(API + "/page_views/up", { keepalive: true }).catch(() => {});
+      fetch(API + "/lang_" + detectedLang + "/up", { keepalive: true }).catch(() => {});
+
+      document.getElementById("cta").addEventListener("click", () => {
+        fetch(API + "/play_clicks/up", { keepalive: true }).catch(() => {});
+      });
+    } else {
+      // Affichage du panneau privé uniquement avec ?stats=1
+      document.getElementById("admin-stats").style.display = "block";
+      Promise.all([
+        fetch(API + "/page_views").then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/play_clicks").then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_fr").then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_en").then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_de").then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_es").then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_zh").then(r => r.json()).catch(() => ({ count: 0 }))
+      ]).then(([views, clicks, fr, en, de, es, zh]) => {
+        const v = views.count || 0;
+        const c = clicks.count || 0;
+        const ctr = v > 0 ? ((c / v) * 100).toFixed(1) : "0.0";
+        document.getElementById("stat-views").innerHTML = "Vues réelles de la page : <strong>" + v + "</strong>";
+        document.getElementById("stat-clicks").innerHTML = "Clics vers Google Play : <strong>" + c + "</strong>";
+        document.getElementById("stat-ctr").innerHTML = "Conversion vers Store : <strong>" + ctr + " %</strong>";
+        document.getElementById("stat-langs").textContent =
+          "Langues : FR (" + (fr.count || 0) + ") • EN (" + (en.count || 0) + ") • DE (" + (de.count || 0) + ") • ES (" + (es.count || 0) + ") • ZH (" + (zh.count || 0) + ")";
+      });
+    }
   </script>
 </body>
 </html>
