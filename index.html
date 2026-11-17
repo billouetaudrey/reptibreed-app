@@ -17,7 +17,7 @@
     .admin-stats { display: none; margin-top: 22px; padding: 14px; background: #161616; border: 1px dashed #444; border-radius: 10px; font-size: 0.84rem; color: #aaa; text-align: left; }
     .admin-stats strong { color: #ff8c00; }
     .admin-stats div { margin: 4px 0; }
-    .test-btn { margin-top: 10px; background: #2a2a2a; color: #ff8c00; border: 1px solid #ff8c00; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; }
+    .test-btn { margin-top: 10px; margin-right: 6px; background: #2a2a2a; color: #ff8c00; border: 1px solid #ff8c00; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -35,13 +35,14 @@
     <a class="btn" id="cta" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
 
     <div class="admin-stats" id="admin-stats">
-      <div><strong>📊 Stats privées ReptiBreed</strong></div>
+      <div><strong>📊 Stats privées ReptiBreed (Live 10s)</strong></div>
       <div id="stat-views">Vues réelles de la page : chargement...</div>
       <div id="stat-clicks">Clics vers Google Play : chargement...</div>
       <div id="stat-ctr">Conversion vers Store : ...</div>
       <div id="stat-langs" style="margin-top:8px; font-size:0.78rem; color:#888;">Langues : ...</div>
       <div id="stat-status" style="margin-top:6px; font-size:0.75rem; color:#666;">Appwrite : vérification...</div>
-      <button class="test-btn" id="btn-test-api">Tester Appwrite (+1 vue)</button>
+      <button class="test-btn" id="btn-refresh">Actualiser</button>
+      <button class="test-btn" id="btn-test-api">Tester (+1 vue)</button>
     </div>
   </div>
 
@@ -152,13 +153,18 @@
       sendEvent("view", detectedLang).catch(() => {});
 
       const ctaBtn = document.getElementById("cta");
-      ctaBtn.addEventListener("click", function (e) {
+      let clicked = false;
+      ctaBtn.addEventListener("click", async function (e) {
         e.preventDefault();
         const targetUrl = ctaBtn.href;
-        sendEvent("click", detectedLang).catch(() => {});
-        setTimeout(() => {
-          window.location.href = targetUrl;
-        }, 200);
+        if (!clicked) {
+          clicked = true;
+          await Promise.race([
+            sendEvent("click", detectedLang).catch(() => {}),
+            new Promise(resolve => setTimeout(resolve, 700))
+          ]);
+        }
+        window.location.href = targetUrl;
       });
     } else {
       document.getElementById("admin-stats").style.display = "block";
@@ -179,7 +185,8 @@
           document.getElementById("stat-ctr").innerHTML = "Conversion vers Store : <strong>" + ctr + " %</strong>";
           document.getElementById("stat-langs").textContent =
             `Langues : FR (${countLang("fr")}) • EN (${countLang("en")}) • DE (${countLang("de")}) • ES (${countLang("es")}) • ZH (${countLang("zh")})`;
-          statusEl.textContent = "Appwrite : connecté OK";
+          const now = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          statusEl.textContent = "Appwrite : connecté OK (màj " + now + ")";
           statusEl.style.color = "#4caf50";
         } catch (err) {
           statusEl.textContent = "Appwrite erreur : " + err.message;
@@ -188,6 +195,9 @@
       }
 
       refreshStats();
+      setInterval(refreshStats, 10000);
+
+      document.getElementById("btn-refresh").addEventListener("click", refreshStats);
 
       document.getElementById("btn-test-api").addEventListener("click", async () => {
         const statusEl = document.getElementById("stat-status");
