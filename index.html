@@ -17,6 +17,7 @@
     .admin-stats { display: none; margin-top: 22px; padding: 14px; background: #161616; border: 1px dashed #444; border-radius: 10px; font-size: 0.84rem; color: #aaa; text-align: left; }
     .admin-stats strong { color: #ff8c00; }
     .admin-stats div { margin: 4px 0; }
+    .test-btn { margin-top: 10px; background: #2a2a2a; color: #ff8c00; border: 1px solid #ff8c00; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -37,8 +38,10 @@
       <div><strong>📊 Stats privées ReptiBreed</strong></div>
       <div id="stat-views">Vues page : chargement...</div>
       <div id="stat-clicks">Clics Google Play : chargement...</div>
-      <div id="stat-ctr">Taux de clic bouton : ...</div>
+      <div id="stat-ctr">Conversion vers Store : ...</div>
       <div id="stat-langs" style="margin-top:8px; font-size:0.78rem; color:#888;">Langues : ...</div>
+      <div id="stat-status" style="margin-top:6px; font-size:0.75rem; color:#666;">API : vérification...</div>
+      <button class="test-btn" id="btn-test-api">Tester l'API (+1 vue)</button>
     </div>
   </div>
 
@@ -93,11 +96,19 @@
     }
 
     function hitCounter(endpoint) {
-      return fetch(API + "/" + endpoint + "/up?t=" + Date.now(), {
+      return fetch(API + "/" + endpoint + "/up", {
         method: "GET",
         cache: "no-store",
         keepalive: true
-      }).catch(() => {});
+      });
+    }
+
+    async function readCounter(endpoint) {
+      const res = await fetch(API + "/" + endpoint, { method: "GET", cache: "no-store" });
+      if (res.status === 400 || res.status === 404) return 0; // Compteur pas encore initialisé
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      return typeof data.count === "number" ? data.count : 0;
     }
 
     const navLang = (navigator.language || "en").toLowerCase().slice(0, 2);
@@ -105,38 +116,60 @@
     setLang(detectedLang);
 
     if (!isAdmin) {
-      hitCounter("page_views");
-      hitCounter("lang_" + detectedLang);
+      hitCounter("page_views").catch(() => {});
+      hitCounter("lang_" + detectedLang).catch(() => {});
 
       const ctaBtn = document.getElementById("cta");
       ctaBtn.addEventListener("click", function (e) {
         e.preventDefault();
         const targetUrl = ctaBtn.href;
-        hitCounter("play_clicks");
+        hitCounter("play_clicks").catch(() => {});
         setTimeout(() => {
           window.location.href = targetUrl;
-        }, 180);
+        }, 200);
       });
     } else {
       document.getElementById("admin-stats").style.display = "block";
-      const nocache = "?t=" + Date.now();
-      Promise.all([
-        fetch(API + "/page_views" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/play_clicks" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_fr" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_en" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_de" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_es" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_zh" + nocache).then(r => r.json()).catch(() => ({ count: 0 }))
-      ]).then(([views, clicks, fr, en, de, es, zh]) => {
-        const v = views.count || 0;
-        const c = clicks.count || 0;
-        const ctr = v > 0 ? ((c / v) * 100).toFixed(1) : "0.0";
-        document.getElementById("stat-views").innerHTML = "Vues réelles de la page : <strong>" + v + "</strong>";
-        document.getElementById("stat-clicks").innerHTML = "Clics vers Google Play : <strong>" + c + "</strong>";
-        document.getElementById("stat-ctr").innerHTML = "Conversion vers Store : <strong>" + ctr + " %</strong>";
-        document.getElementById("stat-langs").textContent =
-          "Langues : FR (" + (fr.count || 0) + ") • EN (" + (en.count || 0) + ") • DE (" + (de.count || 0) + ") • ES (" + (es.count || 0) + ") • ZH (" + (zh.count || 0) + ")";
+
+      async function refreshStats() {
+        const statusEl = document.getElementById("stat-status");
+        try {
+          const [v, c, fr, en, de, es, zh] = await Promise.all([
+            readCounter("page_views"),
+            readCounter("play_clicks"),
+            readCounter("lang_fr"),
+            readCounter("lang_en"),
+            readCounter("lang_de"),
+            readCounter("lang_es"),
+            readCounter("lang_zh")
+          ]);
+          const ctr = v > 0 ? ((c / v) * 100).toFixed(1) : "0.0";
+          document.getElementById("stat-views").innerHTML = "Vues réelles de la page : <strong>" + v + "</strong>";
+          document.getElementById("stat-clicks").innerHTML = "Clics vers Google Play : <strong>" + c + "</strong>";
+          document.getElementById("stat-ctr").innerHTML = "Conversion vers Store : <strong>" + ctr + " %</strong>";
+          document.getElementById("stat-langs").textContent =
+            "Langues : FR (" + fr + ") • EN (" + en + ") • DE (" + de + ") • ES (" + es + ") • ZH (" + zh + ")";
+          statusEl.textContent = "API : connectée OK";
+          statusEl.style.color = "#4caf50";
+        } catch (err) {
+          statusEl.textContent = "API erreur : " + err.message;
+          statusEl.style.color = "#f44336";
+        }
+      }
+
+      refreshStats();
+
+      document.getElementById("btn-test-api").addEventListener("click", async () => {
+        const statusEl = document.getElementById("stat-status");
+        statusEl.textContent = "Envoi du test...";
+        try {
+          const r = await hitCounter("page_views");
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          await refreshStats();
+        } catch (err) {
+          statusEl.textContent = "Échec test : " + err.message;
+          statusEl.style.color = "#f44336";
+        }
       });
     }
   </script>
