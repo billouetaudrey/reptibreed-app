@@ -5,19 +5,173 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ReptiBreed - Android App</title>
   <style>
-    body { background: #121212; color: #f5f5f5; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; text-align: center; }
-    .card { background: #1e1e1e; border: 1px solid #333; border-radius: 16px; padding: 32px 24px; max-width: 420px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .langs { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
-    .langs button { background: #2a2a2a; color: #bbb; border: 1px solid #3a3a3a; border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; cursor: pointer; }
-    .langs button.active { background: #ff8c00; color: #121212; border-color: #ff8c00; font-weight: bold; }
-    h1 { color: #ff8c00; margin: 0 0 12px 0; font-size: 1.85rem; }
-    .badge { display: inline-block; background: #2a2a2a; color: #ff8c00; padding: 4px 12px; border-radius: 20px; font-size: 0.88rem; font-weight: bold; margin-bottom: 14px; }
-    p { color: #ccc; line-height: 1.55; margin-bottom: 24px; font-size: 0.96rem; }
-    .btn { display: inline-block; background: #ff8c00; color: #121212; font-weight: bold; text-decoration: none; padding: 14px 26px; border-radius: 10px; font-size: 1.05rem; }
-    .admin-stats { display: none; margin-top: 22px; padding: 14px; background: #161616; border: 1px dashed #444; border-radius: 10px; font-size: 0.84rem; color: #aaa; text-align: left; }
+    * { box-sizing: border-box; }
+    body {
+      background: #121212;
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+      text-align: center;
+    }
+    .card {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 26px 20px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+    }
+    .langs {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .langs button {
+      background: #2a2a2a;
+      color: #bbb;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .langs button.active {
+      background: #ff8c00;
+      color: #121212;
+      border-color: #ff8c00;
+      font-weight: bold;
+    }
+    .logo {
+      width: 78px;
+      height: 78px;
+      border-radius: 18px;
+      object-fit: cover;
+      border: 2px solid #ff8c00;
+      box-shadow: 0 6px 18px rgba(255, 140, 0, 0.25);
+      margin: 0 auto 12px auto;
+      display: block;
+    }
+    h1 {
+      color: #ff8c00;
+      margin: 0 0 8px 0;
+      font-size: 1.85rem;
+      letter-spacing: -0.3px;
+    }
+    .badge {
+      display: inline-block;
+      background: #2a2a2a;
+      color: #ff8c00;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+    }
+    p {
+      color: #d0d0d0;
+      line-height: 1.5;
+      margin: 0 0 20px 0;
+      font-size: 0.95rem;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      background: #ff8c00;
+      color: #121212;
+      font-weight: bold;
+      text-decoration: none;
+      padding: 15px 20px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
+    }
+    .trust {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: #888;
+    }
+    .screenshots-wrap {
+      margin-top: 22px;
+      text-align: left;
+    }
+    .screenshots-title {
+      font-size: 0.8rem;
+      color: #999;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .screenshots {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screenshots::-webkit-scrollbar {
+      height: 5px;
+    }
+    .screenshots::-webkit-scrollbar-thumb {
+      background: #3a3a3a;
+      border-radius: 4px;
+    }
+    .screenshots img {
+      height: 250px;
+      width: auto;
+      border-radius: 12px;
+      border: 1px solid #333;
+      scroll-snap-align: start;
+      flex-shrink: 0;
+      cursor: pointer;
+      background: #141414;
+    }
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+    .lightbox img {
+      max-width: 95%;
+      max-height: 90vh;
+      border-radius: 14px;
+      border: 1px solid #444;
+    }
+    .admin-stats {
+      display: none;
+      margin-top: 22px;
+      padding: 14px;
+      background: #161616;
+      border: 1px dashed #444;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      color: #aaa;
+      text-align: left;
+    }
     .admin-stats strong { color: #ff8c00; }
     .admin-stats div { margin: 4px 0; }
-    .test-btn { margin-top: 10px; margin-right: 6px; background: #2a2a2a; color: #ff8c00; border: 1px solid #ff8c00; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; }
+    .test-btn {
+      margin-top: 10px;
+      margin-right: 6px;
+      background: #2a2a2a;
+      color: #ff8c00;
+      border: 1px solid #ff8c00;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -29,10 +183,26 @@
       <button onclick="setLang('es')" id="btn-es">ES</button>
       <button onclick="setLang('zh')" id="btn-zh">中文</button>
     </div>
-    <div class="badge" id="badge">5,0 ★ sur Google Play</div>
+
+    <img class="logo" src="logo.jpg" alt="ReptiBreed" onerror="this.remove()">
     <h1>ReptiBreed</h1>
+    <div class="badge" id="badge">5,0 ★ sur Google Play</div>
     <p id="desc">L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.</p>
+
     <a class="btn" id="cta" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
+    <div class="trust" id="trust">Application Android officielle • Gratuite • Sans publicité</div>
+
+    <div class="screenshots-wrap" id="gallery-wrap">
+      <div class="screenshots-title" id="preview-label">Aperçu de l'application (glisser →)</div>
+      <div class="screenshots" id="screenshots">
+        <img src="capture_1.jpg" alt="Capture 1" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
+        <img src="capture_2.jpg" alt="Capture 2" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
+        <img src="capture_3.jpg" alt="Capture 3" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
+        <img src="capture_4.jpg" alt="Capture 4" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
+        <img src="capture_5.jpg" alt="Capture 5" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
+        <img src="capture_6.jpg" alt="Capture 6" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
+      </div>
+    </div>
 
     <div class="admin-stats" id="admin-stats">
       <div><strong>📊 Stats privées ReptiBreed (Live 10s)</strong></div>
@@ -44,6 +214,10 @@
       <button class="test-btn" id="btn-refresh">Actualiser</button>
       <button class="test-btn" id="btn-test-api">Tester (+1 vue)</button>
     </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="this.style.display='none'">
+    <img id="lightbox-img" src="" alt="Aperçu">
   </div>
 
   <script>
@@ -59,30 +233,40 @@
         badge: "5,0 ★ sur Google Play",
         desc: "L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.",
         cta: "📲 Télécharger sur Google Play",
+        trust: "Application Android officielle • Gratuite • Sans publicité",
+        preview: "Aperçu de l'application (glisser →)",
         hl: "fr"
       },
       en: {
         badge: "5.0 ★ on Google Play",
         desc: "The all-in-one Android app for snake & reptile keepers: detailed profiles, feeding, shedding, care, breeding & genetics.",
         cta: "📲 Download on Google Play",
+        trust: "Official Android App • Free • Ad-free",
+        preview: "App preview (swipe →)",
         hl: "en"
       },
       de: {
         badge: "5,0 ★ bei Google Play",
         desc: "Die All-in-One-Android-App für Schlangen- und Reptilienhalter: detaillierte Profile, Fütterung, Häutung, Pflege, Zucht & Genetik.",
         cta: "📲 Bei Google Play herunterladen",
+        trust: "Offizielle Android-App • Kostenlos • Werbefrei",
+        preview: "App-Vorschau (wischen →)",
         hl: "de"
       },
       es: {
         badge: "5,0 ★ en Google Play",
         desc: "La app Android todo en uno para criadores de serpientes y reptiles: fichas detalladas, alimentación, mudas, cuidados, cría y genética.",
         cta: "📲 Descargar en Google Play",
+        trust: "App oficial de Android • Gratis • Sin anuncios",
+        preview: "Vista previa de la app (deslizar →)",
         hl: "es"
       },
       zh: {
         badge: "Google Play 5.0 ★ 评分",
         desc: "专为蛇类与爬宠饲养者打造的一站式 Android 应用：详细档案、喂食、蜕皮、护理、繁殖与基因记录。",
         cta: "📲 前往 Google Play 下载",
+        trust: "官方 Android 应用 • 免费 • 无广告",
+        preview: "应用预览（左右滑动 →）",
         hl: "zh-CN"
       }
     };
@@ -93,10 +277,24 @@
       document.getElementById("badge").textContent = t.badge;
       document.getElementById("desc").textContent = t.desc;
       document.getElementById("cta").textContent = t.cta;
+      document.getElementById("trust").textContent = t.trust;
+      document.getElementById("preview-label").textContent = t.preview;
       document.getElementById("cta").href = "https://play.google.com/store/apps/details?id=com.billou.reptibreed&hl=" + t.hl;
       document.querySelectorAll(".langs button").forEach(b => b.classList.remove("active"));
       const activeBtn = document.getElementById("btn-" + lang);
       if (activeBtn) activeBtn.classList.add("active");
+    }
+
+    function openZoom(src) {
+      document.getElementById("lightbox-img").src = src;
+      document.getElementById("lightbox").style.display = "flex";
+    }
+
+    function checkGallery() {
+      const box = document.getElementById("screenshots");
+      if (box && box.children.length === 0) {
+        document.getElementById("gallery-wrap").style.display = "none";
+      }
     }
 
     const awHeaders = {
