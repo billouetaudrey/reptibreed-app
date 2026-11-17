@@ -92,29 +92,37 @@
       if (activeBtn) activeBtn.classList.add("active");
     }
 
+    function hitCounter(endpoint) {
+      const url = API + "/" + endpoint + "/up";
+      if (!navigator.sendBeacon || !navigator.sendBeacon(url)) {
+        fetch(url, { mode: "no-cors", keepalive: true }).catch(() => {});
+      }
+    }
+
     const navLang = (navigator.language || "en").toLowerCase().slice(0, 2);
     const detectedLang = i18n[navLang] ? navLang : "en";
     setLang(detectedLang);
 
-    // Enregistrement silencieux (ne comptabilise pas tes propres visites admin ?stats=1)
+    // Enregistrement silencieux (ignore tes propres visites admin ?stats=1)
     if (!isAdmin) {
-      fetch(API + "/page_views/up", { keepalive: true }).catch(() => {});
-      fetch(API + "/lang_" + detectedLang + "/up", { keepalive: true }).catch(() => {});
+      hitCounter("page_views");
+      hitCounter("lang_" + detectedLang);
 
       document.getElementById("cta").addEventListener("click", () => {
-        fetch(API + "/play_clicks/up", { keepalive: true }).catch(() => {});
+        hitCounter("play_clicks");
       });
     } else {
       // Affichage du panneau privé uniquement avec ?stats=1
       document.getElementById("admin-stats").style.display = "block";
+      const nocache = "?t=" + Date.now();
       Promise.all([
-        fetch(API + "/page_views").then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/play_clicks").then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_fr").then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_en").then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_de").then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_es").then(r => r.json()).catch(() => ({ count: 0 })),
-        fetch(API + "/lang_zh").then(r => r.json()).catch(() => ({ count: 0 }))
+        fetch(API + "/page_views" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/play_clicks" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_fr" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_en" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_de" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_es" + nocache).then(r => r.json()).catch(() => ({ count: 0 })),
+        fetch(API + "/lang_zh" + nocache).then(r => r.json()).catch(() => ({ count: 0 }))
       ]).then(([views, clicks, fr, en, de, es, zh]) => {
         const v = views.count || 0;
         const c = clicks.count || 0;
