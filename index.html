@@ -92,6 +92,9 @@
       font-size: 1.05rem;
       box-shadow: 0 4px 15px rgba(255, 140, 0, 0.3);
     }
+    .btn-bottom {
+      margin-top: 20px;
+    }
     .trust {
       margin-top: 10px;
       font-size: 0.78rem;
@@ -189,8 +192,8 @@
     <div class="badge" id="badge">5,0 ★ sur Google Play</div>
     <p id="desc">L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.</p>
 
-    <a class="btn" id="cta" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
-    <div class="trust" id="trust">Application Android officielle • Gratuite • Sans publicité</div>
+    <a class="btn js-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
+    <div class="trust" id="trust">Version d'essai gratuite • Sans publicité • Hors-ligne</div>
 
     <div class="screenshots-wrap" id="gallery-wrap">
       <div class="screenshots-title" id="preview-label">Aperçu de l'application (glisser →)</div>
@@ -202,6 +205,7 @@
         <img src="capture_5.jpg" alt="Capture 5" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
         <img src="capture_6.jpg" alt="Capture 6" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
       </div>
+      <a class="btn btn-bottom js-cta" id="cta-bottom" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
     </div>
 
     <div class="admin-stats" id="admin-stats">
@@ -227,13 +231,14 @@
     const AW_TABLE    = "6afc468e000083bc234b";
 
     const isAdmin = new URLSearchParams(window.location.search).get("stats") === "1";
+    let currentLang = "en";
 
     const i18n = {
       fr: {
         badge: "5,0 ★ sur Google Play",
         desc: "L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.",
         cta: "📲 Télécharger sur Google Play",
-        trust: "Application Android officielle • Gratuite • Sans publicité",
+        trust: "Version d'essai gratuite • Sans publicité • Hors-ligne",
         preview: "Aperçu de l'application (glisser →)",
         hl: "fr"
       },
@@ -241,7 +246,7 @@
         badge: "5.0 ★ on Google Play",
         desc: "The all-in-one Android app for snake & reptile keepers: detailed profiles, feeding, shedding, care, breeding & genetics.",
         cta: "📲 Download on Google Play",
-        trust: "Official Android App • Free • Ad-free",
+        trust: "Free trial version • Ad-free • Works offline",
         preview: "App preview (swipe →)",
         hl: "en"
       },
@@ -249,7 +254,7 @@
         badge: "5,0 ★ bei Google Play",
         desc: "Die All-in-One-Android-App für Schlangen- und Reptilienhalter: detaillierte Profile, Fütterung, Häutung, Pflege, Zucht & Genetik.",
         cta: "📲 Bei Google Play herunterladen",
-        trust: "Offizielle Android-App • Kostenlos • Werbefrei",
+        trust: "Kostenlose Testversion • Werbefrei • Offline nutzbar",
         preview: "App-Vorschau (wischen →)",
         hl: "de"
       },
@@ -257,7 +262,7 @@
         badge: "5,0 ★ en Google Play",
         desc: "La app Android todo en uno para criadores de serpientes y reptiles: fichas detalladas, alimentación, mudas, cuidados, cría y genética.",
         cta: "📲 Descargar en Google Play",
-        trust: "App oficial de Android • Gratis • Sin anuncios",
+        trust: "Versión de prueba gratuita • Sin anuncios • Sin conexión",
         preview: "Vista previa de la app (deslizar →)",
         hl: "es"
       },
@@ -265,7 +270,7 @@
         badge: "Google Play 5.0 ★ 评分",
         desc: "专为蛇类与爬宠饲养者打造的一站式 Android 应用：详细档案、喂食、蜕皮、护理、繁殖与基因记录。",
         cta: "📲 前往 Google Play 下载",
-        trust: "官方 Android 应用 • 免费 • 无广告",
+        trust: "免费试用版 • 无广告 • 支持离线使用",
         preview: "应用预览（左右滑动 →）",
         hl: "zh-CN"
       }
@@ -273,15 +278,21 @@
 
     function setLang(lang) {
       const t = i18n[lang] || i18n.en;
-      document.documentElement.lang = lang;
+      currentLang = i18n[lang] ? lang : "en";
+      document.documentElement.lang = currentLang;
       document.getElementById("badge").textContent = t.badge;
       document.getElementById("desc").textContent = t.desc;
-      document.getElementById("cta").textContent = t.cta;
       document.getElementById("trust").textContent = t.trust;
       document.getElementById("preview-label").textContent = t.preview;
-      document.getElementById("cta").href = "https://play.google.com/store/apps/details?id=com.billou.reptibreed&hl=" + t.hl;
+
+      const storeUrl = "https://play.google.com/store/apps/details?id=com.billou.reptibreed&hl=" + t.hl;
+      document.querySelectorAll(".js-cta").forEach(btn => {
+        btn.textContent = t.cta;
+        btn.href = storeUrl;
+      });
+
       document.querySelectorAll(".langs button").forEach(b => b.classList.remove("active"));
-      const activeBtn = document.getElementById("btn-" + lang);
+      const activeBtn = document.getElementById("btn-" + currentLang);
       if (activeBtn) activeBtn.classList.add("active");
     }
 
@@ -347,24 +358,27 @@
     const detectedLang = i18n[navLang] ? navLang : "en";
     setLang(detectedLang);
 
-    if (!isAdmin) {
+    const isBot = navigator.webdriver === true;
+
+    if (!isAdmin && !isBot) {
       sendEvent("view", detectedLang).catch(() => {});
 
-      const ctaBtn = document.getElementById("cta");
       let clicked = false;
-      ctaBtn.addEventListener("click", async function (e) {
-        e.preventDefault();
-        const targetUrl = ctaBtn.href;
-        if (!clicked) {
-          clicked = true;
-          await Promise.race([
-            sendEvent("click", detectedLang).catch(() => {}),
-            new Promise(resolve => setTimeout(resolve, 700))
-          ]);
-        }
-        window.location.href = targetUrl;
+      document.querySelectorAll(".js-cta").forEach(ctaBtn => {
+        ctaBtn.addEventListener("click", async function (e) {
+          e.preventDefault();
+          const targetUrl = ctaBtn.href;
+          if (!clicked) {
+            clicked = true;
+            await Promise.race([
+              sendEvent("click", currentLang).catch(() => {}),
+              new Promise(resolve => setTimeout(resolve, 700))
+            ]);
+          }
+          window.location.href = targetUrl;
+        });
       });
-    } else {
+    } else if (isAdmin) {
       document.getElementById("admin-stats").style.display = "block";
 
       async function refreshStats() {
@@ -401,7 +415,7 @@
         const statusEl = document.getElementById("stat-status");
         statusEl.textContent = "Enregistrement du test...";
         try {
-          const r = await sendEvent("view", detectedLang);
+          const r = await sendEvent("view", currentLang);
           if (!r.ok) {
             const errBody = await r.json().catch(() => ({}));
             throw new Error(errBody.message || ("HTTP " + r.status));
