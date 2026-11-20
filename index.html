@@ -101,6 +101,7 @@
       color: #888;
     }
     .screenshots-wrap {
+      display: none;
       margin-top: 22px;
       text-align: left;
     }
@@ -187,7 +188,7 @@
       <button onclick="setLang('zh')" id="btn-zh">中文</button>
     </div>
 
-    <img class="logo" src="logo.jpg" alt="ReptiBreed" onerror="this.remove()">
+    <img class="logo" id="app-logo" src="logo.png" alt="ReptiBreed" onerror="if(!this.dataset.tried){this.dataset.tried='1';this.src='logo.jpg';}else{this.remove();}">
     <h1>ReptiBreed</h1>
     <div class="badge" id="badge">5,0 ★ sur Google Play</div>
     <p id="desc">L'application Android tout-en-un pour les éleveurs de serpents et reptiles : fiches détaillées, repas, mues, soins, reproduction et génétique.</p>
@@ -197,14 +198,7 @@
 
     <div class="screenshots-wrap" id="gallery-wrap">
       <div class="screenshots-title" id="preview-label">Aperçu de l'application (glisser →)</div>
-      <div class="screenshots" id="screenshots">
-        <img src="capture_1.jpg" alt="Capture 1" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
-        <img src="capture_2.jpg" alt="Capture 2" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
-        <img src="capture_3.jpg" alt="Capture 3" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
-        <img src="capture_4.jpg" alt="Capture 4" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
-        <img src="capture_5.jpg" alt="Capture 5" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
-        <img src="capture_6.jpg" alt="Capture 6" onclick="openZoom(this.src)" onerror="this.remove(); checkGallery();">
-      </div>
+      <div class="screenshots" id="screenshots"></div>
       <a class="btn btn-bottom js-cta" id="cta-bottom" href="https://play.google.com/store/apps/details?id=com.billou.reptibreed">📲 Télécharger sur Google Play</a>
     </div>
 
@@ -301,12 +295,41 @@
       document.getElementById("lightbox").style.display = "flex";
     }
 
-    function checkGallery() {
-      const box = document.getElementById("screenshots");
-      if (box && box.children.length === 0) {
-        document.getElementById("gallery-wrap").style.display = "none";
+    // Détection automatique de capture_1, capture_2, ... en .png, .jpg, .jpeg ou .webp
+    function probeImage(src) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(src);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    async function loadScreenshots() {
+      const container = document.getElementById("screenshots");
+      const wrap = document.getElementById("gallery-wrap");
+      const exts = ["png", "jpg", "jpeg", "webp"];
+      let index = 1;
+
+      while (index <= 30) {
+        let foundSrc = null;
+        for (const ext of exts) {
+          foundSrc = await probeImage(`capture_${index}.${ext}`);
+          if (foundSrc) break;
+        }
+        if (!foundSrc) break; // Arrêt dès qu'un numéro n'existe pas
+
+        const imgEl = document.createElement("img");
+        imgEl.src = foundSrc;
+        imgEl.alt = `Capture ${index}`;
+        imgEl.onclick = () => openZoom(foundSrc);
+        container.appendChild(imgEl);
+        wrap.style.display = "block";
+        index++;
       }
     }
+
+    loadScreenshots();
 
     const awHeaders = {
       "Content-Type": "application/json",
